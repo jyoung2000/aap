@@ -44,11 +44,16 @@ export function isDebuggerAvailable(): boolean {
   return chromeDebugger() !== null;
 }
 
+// `debugger` is a valid runtime permission but isn't in the polyfill's literal union.
+const DEBUGGER_PERMS = { permissions: ['debugger'] } as unknown as Parameters<
+  typeof browser.permissions.request
+>[0];
+
 /** Ask the user (once) to grant the optional `debugger` permission. */
 export async function requestDebuggerPermission(): Promise<boolean> {
   if (!isDebuggerAvailable()) return false;
   try {
-    return await browser.permissions.request({ permissions: ['debugger'] });
+    return await browser.permissions.request(DEBUGGER_PERMS);
   } catch {
     return false;
   }
@@ -56,7 +61,7 @@ export async function requestDebuggerPermission(): Promise<boolean> {
 
 export async function hasDebuggerPermission(): Promise<boolean> {
   try {
-    return await browser.permissions.contains({ permissions: ['debugger'] });
+    return await browser.permissions.contains(DEBUGGER_PERMS);
   } catch {
     return false;
   }

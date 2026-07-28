@@ -158,8 +158,9 @@ export function scanFields(): ScannedField[] {
   }
 
   for (const [name, radios] of radioGroups) {
-    if (!radios.length) continue;
-    const groupLabel = deriveLabel(radios[0].closest('fieldset') || radios[0]) || humanize(name);
+    const first = radios[0];
+    if (!first) continue;
+    const groupLabel = deriveLabel(first.closest('fieldset') || first) || humanize(name);
     out.push({
       key: name,
       label: groupLabel,
@@ -219,9 +220,7 @@ function fireInput(el: Element): void {
 }
 
 function fireKey(el: Element, type: 'keydown' | 'keypress' | 'keyup', ch: string): void {
-  el.dispatchEvent(
-    new KeyboardEvent(type, { bubbles: true, cancelable: true, key: ch, char: ch }),
-  );
+  el.dispatchEvent(new KeyboardEvent(type, { bubbles: true, cancelable: true, key: ch }));
 }
 
 export function scrollIntoView(el: HTMLElement): void {

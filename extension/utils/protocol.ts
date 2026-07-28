@@ -12,6 +12,7 @@ export const CMD = {
   NOTIFY: 'notify',
   BRING_TO_FRONT: 'bringToFront',
   CONTENT_READY: 'contentReady',
+  FETCH_RESUME: 'fetchResume',
   // popup -> background
   GET_STATE: 'getState',
   UNPAIR: 'unpair',

@@ -150,8 +150,8 @@ export function showApproveBar(items: ApproveItem[]): Promise<ApproveResult> {
       </div>`;
     card.querySelectorAll<HTMLInputElement>('input[data-i]').forEach((inp) => {
       inp.addEventListener('input', () => {
-        const idx = Number(inp.dataset.i);
-        values[items[idx].label] = inp.value;
+        const it = items[Number(inp.dataset.i)];
+        if (it) values[it.label] = inp.value;
       });
     });
   };

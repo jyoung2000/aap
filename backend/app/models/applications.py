@@ -67,9 +67,10 @@ class Application(Base):
 
     # Snapshot of the final field values that were entered.
     field_snapshot: Mapped[dict] = mapped_column(JSON, default=dict)
-    confirmation_screenshot: Mapped[str] = mapped_column(String(1024), default="")
+    # Either a /media/ path (server executor) or a data-URL JPEG (extension) — Text, not varchar.
+    confirmation_screenshot: Mapped[str] = mapped_column(Text, default="")
     error: Mapped[str] = mapped_column(Text, default="")
-    error_screenshot: Mapped[str] = mapped_column(String(1024), default="")
+    error_screenshot: Mapped[str] = mapped_column(Text, default="")
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
 
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -117,7 +118,8 @@ class Intervention(Base):
     field_type: Mapped[str] = mapped_column(String(32), default="text")
     options: Mapped[list] = mapped_column(JSON, default=list)
     question: Mapped[str] = mapped_column(Text, default="")
-    screenshot: Mapped[str] = mapped_column(String(1024), default="")
+    # May hold a data-URL JPEG from the extension — Text, not varchar.
+    screenshot: Mapped[str] = mapped_column(Text, default="")
     answer: Mapped[str] = mapped_column(Text, default="")
     resolved: Mapped[bool] = mapped_column(Boolean, default=False)
     save_to_kb: Mapped[bool] = mapped_column(Boolean, default=True)
