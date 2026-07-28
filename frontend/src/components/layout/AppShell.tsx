@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/cn';
 import { useAuth } from '@/context/AuthContext';
 import { useSocket, useSocketEvent } from '@/hooks/useSocket';
@@ -228,7 +229,15 @@ export function AppShell() {
       {/* Main */}
       <div className={cn(!isMobile && 'pl-64')}>
         <main className={cn('mx-auto w-full max-w-[1200px] px-4 py-5 sm:px-6 lg:px-8 lg:py-8', isMobile && 'pb-24')}>
-          <Outlet />
+          <Suspense
+            fallback={
+              <div className="grid place-items-center py-32">
+                <Spinner className="h-6 w-6 text-accent-600" />
+              </div>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </main>
       </div>
 

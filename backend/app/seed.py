@@ -29,7 +29,7 @@ from .sources.registry import dedupe_key, run_discovery
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("jobpilot.seed")
 
-DEMO_EMAIL = "demo@jobpilot.local"
+DEMO_EMAIL = "demo@example.com"
 DEMO_PASSWORD = "demo12345"
 
 # Curated fallback listings so the results screen is populated even on a locked-down

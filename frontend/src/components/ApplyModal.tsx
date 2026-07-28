@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/Toast';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Toggle } from '@/components/ui/Toggle';
+import { Checkmark } from '@/components/ui/Checkmark';
 import { cn } from '@/lib/cn';
 
 const MODES: { value: ApplyMode; label: string; desc: string }[] = [
@@ -35,6 +36,7 @@ export function ApplyModal({
   const [humanized, setHumanized] = useState(true);
   const [reviewFirst, setReviewFirst] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(0);
 
   const count = jobIds.length;
 
@@ -48,18 +50,36 @@ export function ApplyModal({
         humanized,
         review_first: reviewFirst,
       });
+      setSuccess(apps.length);
       toast.success(
         `${apps.length} application${apps.length === 1 ? '' : 's'} queued`,
         'Track progress in the Apply Queue.',
       );
       onApplied?.(apps);
-      onClose();
+      window.setTimeout(() => {
+        setSuccess(0);
+        setSubmitting(false);
+        onClose();
+      }, 1100);
     } catch (err) {
       toast.error('Could not queue applications', err instanceof Error ? err.message : undefined);
-    } finally {
       setSubmitting(false);
     }
   };
+
+  if (success > 0) {
+    return (
+      <Modal open={open} onClose={() => undefined} size="sm">
+        <div className="flex flex-col items-center py-6 text-center">
+          <Checkmark size={72} />
+          <p className="mt-4 text-lg font-semibold tracking-tightest">Queued!</p>
+          <p className="mt-1 text-sm text-muted">
+            {success} application{success === 1 ? '' : 's'} on the way.
+          </p>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal

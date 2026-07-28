@@ -1,4 +1,4 @@
-import { api, qs } from './client';
+import { api, qs, request } from './client';
 import type {
   ApplicationCreate,
   ApplicationOut,
@@ -42,7 +42,8 @@ export const AuthApi = {
   signin: (email: string, password: string) =>
     api.post<UserOut>('/api/auth/signin', { email, password }),
   signout: () => api.post<null>('/api/auth/signout'),
-  me: () => api.get<UserOut>('/api/auth/me'),
+  // The initial probe must not hard-redirect on 401 — RequireAuth routes instead.
+  me: () => request<UserOut>('/api/auth/me', { method: 'GET', skipAuthRedirect: true }),
   updateSettings: (patch: UserSettingsUpdate) => api.patch<UserOut>('/api/auth/me', patch),
   changePassword: (current_password: string, new_password: string) =>
     api.post<null>('/api/auth/change-password', { current_password, new_password }),

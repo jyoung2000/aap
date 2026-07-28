@@ -122,6 +122,11 @@ export function Queue() {
     toast.info('Resuming', 'Told the executor to continue.');
   };
 
+  const sendInput = (appId: string, event: Record<string, unknown>) =>
+    send({ type: 'screencast.input', application_id: appId, event });
+  const sendScreencast = (appId: string, action: 'start' | 'stop') =>
+    send({ type: `screencast.${action}`, application_id: appId });
+
   // ---- Keyboard shortcuts ----
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -150,7 +155,8 @@ export function Queue() {
         case 'a':
           if (iv) {
             e.preventDefault();
-            void submitAnswer(iv);
+            if (iv.kind === 'captcha') resumeCaptcha(iv.application_id);
+            else void submitAnswer(iv);
           }
           break;
         case 'e':
@@ -228,6 +234,8 @@ export function Queue() {
                 onSubmit={() => submitAnswer(iv)}
                 onSkip={() => skipApplication(iv.application_id)}
                 onResume={() => resumeCaptcha(iv.application_id)}
+                onInput={(event) => sendInput(iv.application_id, event)}
+                onScreencast={(action) => sendScreencast(iv.application_id, action)}
                 registerEdit={(fn) => {
                   if (i === activeIndex) editRef.current = fn;
                 }}

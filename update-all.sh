@@ -43,7 +43,7 @@ echo "======================================================================"
 echo "  JobPilot is starting."
 BASE_URL="$(grep -E '^PUBLIC_BASE_URL=' .env | cut -d= -f2- || true)"
 echo "  Open:  ${BASE_URL:-http://localhost:1456}"
-echo "  Demo login (seeded on first boot):  demo@jobpilot.local  /  demo12345"
+echo "  Demo login (seeded on first boot):  demo@example.com  /  demo12345"
 echo "  Settings → Extension to download & pair the browser extension."
 echo "======================================================================"
 echo

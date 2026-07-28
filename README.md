@@ -77,7 +77,7 @@ docker compose up --build
 
 Then open **http://localhost:1456**.
 
-- A **demo account is seeded** on first boot: `demo@jobpilot.local` / `demo12345` (or create your own).
+- A **demo account is seeded** on first boot: `demo@example.com` / `demo12345` (or create your own).
 - `docker compose build` also builds the **extension bundles**; download them from **Settings → Extension**.
 - Without an `ANTHROPIC_API_KEY`, JobPilot still runs — it uses transparent heuristic fallbacks for summaries, match scores, and field mapping.
 

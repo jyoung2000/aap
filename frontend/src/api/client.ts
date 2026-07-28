@@ -35,6 +35,8 @@ interface RequestOptions {
   form?: FormData;
   headers?: Record<string, string>;
   signal?: AbortSignal;
+  /** Skip the global 401 -> /signin redirect (used by the initial auth probe). */
+  skipAuthRedirect?: boolean;
 }
 
 async function parseBody(res: Response): Promise<unknown> {
@@ -95,7 +97,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   if (res.status === 401) {
-    if (onUnauthorized) onUnauthorized();
+    if (onUnauthorized && !options.skipAuthRedirect) onUnauthorized();
     throw new ApiError(401, 'Not authenticated');
   }
 

@@ -1,3 +1,4 @@
+import { lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
@@ -7,13 +8,15 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Spinner } from '@/components/ui/Spinner';
 import { SignIn } from '@/pages/SignIn';
 import { SignUp } from '@/pages/SignUp';
-import { Dashboard } from '@/pages/Dashboard';
-import { SearchPage } from '@/pages/Search';
-import { Jobs } from '@/pages/Jobs';
-import { Queue } from '@/pages/Queue';
-import { Analytics } from '@/pages/Analytics';
-import { Profile } from '@/pages/Profile';
-import { Settings } from '@/pages/Settings';
+
+// Route-level code splitting keeps recharts and heavy pages out of the initial bundle.
+const Dashboard = lazy(() => import('@/pages/Dashboard').then((m) => ({ default: m.Dashboard })));
+const SearchPage = lazy(() => import('@/pages/Search').then((m) => ({ default: m.SearchPage })));
+const Jobs = lazy(() => import('@/pages/Jobs').then((m) => ({ default: m.Jobs })));
+const Queue = lazy(() => import('@/pages/Queue').then((m) => ({ default: m.Queue })));
+const Analytics = lazy(() => import('@/pages/Analytics').then((m) => ({ default: m.Analytics })));
+const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })));
+const Settings = lazy(() => import('@/pages/Settings').then((m) => ({ default: m.Settings })));
 
 function FullScreenLoader() {
   return (

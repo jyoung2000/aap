@@ -39,6 +39,8 @@ export function InterventionCard({
   onSubmit,
   onSkip,
   onResume,
+  onInput,
+  onScreencast,
   registerEdit,
 }: {
   intervention: InterventionOut;
@@ -54,6 +56,8 @@ export function InterventionCard({
   onSubmit: () => void;
   onSkip: () => void;
   onResume: () => void;
+  onInput: (event: Record<string, unknown>) => void;
+  onScreencast: (action: 'start' | 'stop') => void;
   registerEdit: (fn: () => void) => void;
 }) {
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null>(null);
@@ -69,6 +73,29 @@ export function InterventionCard({
   useEffect(() => {
     if (active) cardRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [active]);
+
+  // Ask the executor to begin/stop streaming the blocked tab while a CAPTCHA is shown.
+  const screencastRef = useRef(onScreencast);
+  screencastRef.current = onScreencast;
+  useEffect(() => {
+    if (!isCaptcha) return;
+    screencastRef.current('start');
+    return () => screencastRef.current('stop');
+  }, [isCaptcha]);
+
+  const moveThrottle = useRef(0);
+  const forwardPointer = (e: React.PointerEvent<HTMLImageElement>, type: string) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+    if (type === 'pointermove') {
+      const now = Date.now();
+      if (now - moveThrottle.current < 60) return;
+      moveThrottle.current = now;
+    }
+    onInput({ type, x, y });
+  };
 
   const options = iv.options ?? [];
   const useRadios = options.length > 0 && options.length <= 6;
@@ -118,7 +145,16 @@ export function InterventionCard({
           </div>
           <div className="grid place-items-center overflow-hidden rounded-xl border border-[rgb(var(--border))] bg-black/90">
             {frame ? (
-              <img src={imgSrc(frame)} alt="Live CAPTCHA view" className="max-h-[420px] w-full object-contain" />
+              <img
+                src={imgSrc(frame)}
+                alt="Live CAPTCHA view — tap to solve"
+                className="max-h-[420px] w-full touch-none select-none object-contain"
+                draggable={false}
+                onPointerDown={(e) => forwardPointer(e, 'pointerdown')}
+                onPointerMove={(e) => forwardPointer(e, 'pointermove')}
+                onPointerUp={(e) => forwardPointer(e, 'pointerup')}
+                onClick={(e) => forwardPointer(e as unknown as React.PointerEvent<HTMLImageElement>, 'click')}
+              />
             ) : (
               <div className="flex h-48 items-center gap-2 text-[13px] text-white/70">
                 <span className="h-2 w-2 animate-pulse-dot rounded-full bg-amber-400" />
@@ -126,6 +162,7 @@ export function InterventionCard({
               </div>
             )}
           </div>
+          <p className="text-[12px] text-subtle">Tap or drag directly on the image above to solve it yourself.</p>
           <div className="flex items-center justify-end gap-2">
             <Button variant="secondary" onClick={onSkip} disabled={busy} leftIcon={<IconSkip className="h-4 w-4" />}>
               Skip
