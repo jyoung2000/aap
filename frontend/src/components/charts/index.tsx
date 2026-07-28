@@ -30,6 +30,8 @@ function useChartTheme() {
   };
 }
 
+type TipPayload = Array<{ value?: number | string; name?: string }>;
+
 function TooltipBox({
   active,
   payload,
@@ -37,8 +39,8 @@ function TooltipBox({
   formatter,
 }: {
   active?: boolean;
-  payload?: Array<{ value?: number | string; name?: string }>;
-  label?: string | number;
+  payload?: TipPayload;
+  label?: ReactNode;
   formatter?: (v: number | string, name?: string) => ReactNode;
 }) {
   const t = useChartTheme();
@@ -48,13 +50,29 @@ function TooltipBox({
       className="rounded-xl border px-3 py-2 text-[12.5px] shadow-elevated"
       style={{ background: t.tooltipBg, borderColor: t.tooltipBorder, color: t.text }}
     >
-      {label !== undefined && <div className="mb-0.5 font-medium">{label}</div>}
+      {label !== undefined && label !== '' && <div className="mb-0.5 font-medium">{label}</div>}
       {payload.map((p, i) => (
         <div key={i} className="tabular-nums">
           {formatter ? formatter(p.value ?? 0, p.name) : `${p.value}`}
         </div>
       ))}
     </div>
+  );
+}
+
+function renderTooltip(
+  formatter: (v: number | string, name?: string) => ReactNode,
+  labelFormatter?: (label: string | number | undefined) => ReactNode,
+) {
+  // Recharts injects its own props at runtime; `any` is contained to this boundary.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (props: any) => (
+    <TooltipBox
+      active={props.active}
+      payload={props.payload as TipPayload}
+      label={labelFormatter ? labelFormatter(props.label) : props.label}
+      formatter={formatter}
+    />
   );
 }
 
@@ -91,12 +109,9 @@ export function AreaTrend({ data, height = 240 }: { data: TimePoint[]; height?: 
         />
         <Tooltip
           cursor={{ stroke: t.grid }}
-          content={(props) => (
-            <TooltipBox
-              {...props}
-              label={fmtDate(String(props.label))}
-              formatter={(v) => `${v} application${Number(v) === 1 ? '' : 's'}`}
-            />
+          content={renderTooltip(
+            (v) => `${v} application${Number(v) === 1 ? '' : 's'}`,
+            (l) => fmtDate(String(l)),
           )}
         />
         <Area
@@ -131,7 +146,7 @@ export function SourceBars({ data, height = 240 }: { data: SourceCount[]; height
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip cursor={{ fill: t.grid }} content={(props) => <TooltipBox {...props} formatter={(v) => `${v} jobs`} />} />
+        <Tooltip cursor={{ fill: t.grid }} content={renderTooltip((v) => `${v} jobs`)} />
         <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={22}>
           {rows.map((_, i) => (
             <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />
@@ -159,7 +174,7 @@ export function FunnelBars({ stages, height = 260 }: { stages: FunnelStage[]; he
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip cursor={{ fill: t.grid }} content={(props) => <TooltipBox {...props} formatter={(v) => `${v}`} />} />
+        <Tooltip cursor={{ fill: t.grid }} content={renderTooltip((v) => `${v}`)} />
         <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={26}>
           {stages.map((_, i) => (
             <Cell key={i} fill={FUNNEL_COLORS[i % FUNNEL_COLORS.length]} />
