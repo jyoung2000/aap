@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend deps
+        working-directory: backend
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite:///./ci.db
+          DATA_DIR: ./data
+          SERVER_EXECUTOR_MODE: simulate
+          ANTHROPIC_API_KEY: ""
+        run: pytest -q
+      - name: Verify Alembic migration applies
+        working-directory: backend
+        env:
+          ALEMBIC_URL: sqlite:///./migrate.db
+          DATA_DIR: ./data
+        run: alembic upgrade head && alembic downgrade base
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+      - name: Upload frontend bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-static
+          path: backend/app/static
+
+  extension-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build Chrome + Firefox extension bundles
+        working-directory: extension
+        env:
+          EXTENSION_VERSION: ${{ github.sha }}
+        run: |
+          npm install --no-audit --no-fund
+          npm run bundle
+      - name: Upload extension bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-bundles
+          path: |
+            backend/app/static/extension/jobpilot-chrome.zip
+            backend/app/static/extension/jobpilot-firefox.xpi
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [backend-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image (frontend + extension + backend)
+        run: docker build -f backend/Dockerfile -t jobpilot:ci .
