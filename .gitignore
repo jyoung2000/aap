@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+.output/
+.wxt/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.local
+*.local
+
+# Data / uploads / build artifacts
+backend/app/static/assets/
+backend/uploads/
+data/
+*.sqlite3
+*.db
+
+# Generated static (frontend build + extension bundles). Keep the dir, ignore contents.
+backend/app/static/*
+!backend/app/static/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

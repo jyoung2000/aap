@@ -1,0 +1,85 @@
+# JobPilot — docker compose. `docker compose up` serves everything on :1456.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jobpilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobpilot}
+      POSTGRES_DB: ${POSTGRES_DB:-jobpilot}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-jobpilot} -d ${POSTGRES_DB:-jobpilot}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        EXTENSION_VERSION: ${EXTENSION_VERSION:-1.0.0}
+        INSTALL_BROWSERS: ${INSTALL_BROWSERS:-false}
+    image: jobpilot:local
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      REDIS_HOST: redis
+      DATA_DIR: /data
+      RUN_MIGRATIONS: "1"
+      SEED_ON_START: ${SEED_ON_START:-true}
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "1456"]
+    ports:
+      - "${APP_PORT:-1456}:1456"
+    volumes:
+      - jobpilot-data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    image: jobpilot:local
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        EXTENSION_VERSION: ${EXTENSION_VERSION:-1.0.0}
+        INSTALL_BROWSERS: ${INSTALL_BROWSERS:-false}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      REDIS_HOST: redis
+      DATA_DIR: /data
+    command: ["arq", "app.worker.main.WorkerSettings"]
+    volumes:
+      - jobpilot-data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_started
+
+volumes:
+  pgdata:
+  redisdata:
+  jobpilot-data:
